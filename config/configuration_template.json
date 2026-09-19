@@ -1,0 +1,12 @@
+{
+  "email_address": "your@email.com",
+  "password": "your-password",
+  "imap_server": "imap.example.com",
+  "imap_port": 993,
+  "check_interval_minutes": 120,
+  "keywords": ["invoice", "important", "alert"],
+  "search_in": ["subject", "sender", "body"],
+  "notification_audio_file": "assets/notification.wav",
+  "message_title": "New matching email",
+  "message_description": "A matching unread email was found."
+}
