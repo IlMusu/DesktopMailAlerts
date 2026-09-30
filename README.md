@@ -136,19 +136,22 @@ This stops the application, removes the scheduled task, and deletes the generate
 
 Your `config` and `assets` folders are preserved.
 
-## Running from Source
+## Testing
 
-With the virtual environment created by `install.bat`:
-
-```text
-.venv\Scripts\python.exe main.py
-```
-
-To check the mailbox immediately, ignoring `check_interval_minutes`:
+The program can be tested by running, from the project folder:
 
 ```text
-.venv\Scripts\python.exe main.py --force-check
+python .\main.py --force-check
 ```
+
+`--force-check` checks the mailbox immediately, ignoring `check_interval_minutes`, and shows the notification if a matching unread email is found. The dependencies in `requirements.txt` must be installed for this command to work. <br>
+The simpler way to do this is to install the application with `install.bat`, open a console in the installation location, and then run:
+
+```text
+ `.venv\Scripts\python.exe .\main.py --force-check`.
+```
+
+**Warning:** with `notify_only_once` set to `true`, the emails notified during a test are recorded in `config/state.json` and will not be notified again by the scheduled task.
 
 ## Project Structure
 
