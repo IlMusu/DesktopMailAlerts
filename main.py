@@ -25,7 +25,9 @@ def _check_emails(mail_checker: MailChecker, notifier: DesktopNotifier, state_ma
 
     mails = mail_checker.retrieve_mails_passing_filter()
     for mail in mails:
-        state_manager.state.notified_uids.append(mail.uid)
+        notified_set = set(state_manager.state.notified_uids)
+        notified_set.add(mail.uid)
+        state_manager.state.notified_uids = list(notified_set)
 
     if len(mails) > 0:
         print("At least one mail to notify has been found!")
