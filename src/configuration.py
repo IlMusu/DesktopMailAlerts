@@ -1,19 +1,15 @@
 import json
 from dataclasses import dataclass
+from dacite import Config, from_dict
+from src.desktop_notifier import DesktopNotifierConfiguration
+from src.mail_service import MailCheckerConfiguration, MailServiceConfiguration
 
 @dataclass
 class Configuration:
-    email_address: str
-    password: str
-    imap_server: str
-    imap_port: int
-    check_interval_minutes: float
-    keywords: list[str]
-    search_in: list[str]
-    notification_audio_file: str
-    message_title: str
-    message_description: str
-
+    mail_service: MailServiceConfiguration
+    mail_checker: MailCheckerConfiguration
+    notification: DesktopNotifierConfiguration
+    check_interval_minutes: float= 60
 
 class ConfigurationManager:
     def __init__(self, file: str):
@@ -22,4 +18,6 @@ class ConfigurationManager:
 
     def load(self) -> Configuration:
         with open(self.file, "r", encoding="utf-8") as f:
-            return Configuration(**json.load(f))
+            data = json.load(f)
+        # strict: reject unknown keys, so typos are reported instead of silently ignored.
+        return from_dict(Configuration, data, config=Config(strict=True))

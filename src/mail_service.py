@@ -1,7 +1,7 @@
 import imaplib
 import email
 from typing import Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from email.utils import parseaddr
 from email.header import Header, decode_header
 from email.message import Message
@@ -73,12 +73,19 @@ class MailDecoder:
         return body
 
 
+@dataclass
+class MailServiceConfiguration:
+    mail_address: str
+    password: str
+    imap_server: str
+    imap_port: int
+
 class MailService:
-    def __init__(self, server: str, port: int, address: str, password: str):
-        self.server = server
-        self.port = port
-        self.address = address
-        self.password = password
+    def __init__(self, configuration: MailServiceConfiguration):
+        self.server = configuration.imap_server
+        self.port = configuration.imap_port
+        self.address = configuration.mail_address
+        self.password = configuration.password
 
     def connect_to_mail_service(self) -> imaplib.IMAP4_SSL:
         print("Connecting to mail service...")
@@ -133,33 +140,40 @@ class MailService:
             mails.append(mail)
         return mails
 
+@dataclass
+class MailCheckerConfiguration:
+    keywords: list[str] = field(default_factory=list)
+    search_in: list[str] = field(default_factory=lambda: ["subject", "sender", "body"])
+    notify_only_once: bool = False
 
 class MailChecker:
-    def __init__(self, mail_service: MailService, search_in: list[str], keywords: list[str], notified_uid: list[str]):
+    def __init__(self, configuration: MailCheckerConfiguration, mail_service: MailService, notified_uids: list[str]):
         self.mail_service = mail_service
-        self.search_in = search_in
-        self.keywords = keywords
-        self.notified_uid = notified_uid
+        self.search_in = configuration.search_in
+        self.keywords = configuration.keywords
+        self.notified_uids = notified_uids
+        self.notify_only_once = configuration.notify_only_once
 
     def has_matching_keyword(self, mail: Mail) -> bool:
         fields = []
         if "subject" in self.search_in:
-            fields.append(mail.subject.lower())
+            fields.append(mail.subject)
         if "sender" in self.search_in:
-            fields.append(mail.sender.lower())
+            fields.append(mail.sender)
         if "body" in self.search_in:
-            fields.append(mail.body.lower())
-        combined_text = "\n".join(fields)
+            fields.append(mail.body)
+        combined_text = "\n".join(fields).casefold()
 
         for keyword in self.keywords:
-            if keyword in combined_text:
+            if keyword.casefold() in combined_text:
                 return True
         return False
 
     def retrieve_mails_passing_filter(self) -> list[Mail]:
         passing_mails :list[Mail]= []
+        uids_to_ignore :list[str]= self.notified_uids if self.notify_only_once else []
 
-        mails = self.mail_service.get_unread_emails(self.notified_uid)
+        mails = self.mail_service.get_unread_emails(uids_to_ignore)
         for mail in mails:
             if self.has_matching_keyword(mail):
                 passing_mails.append(mail)

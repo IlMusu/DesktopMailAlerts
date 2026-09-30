@@ -1,2 +1,2 @@
-winotify
 pyinstaller
+dacite

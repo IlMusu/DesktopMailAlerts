@@ -41,27 +41,28 @@ def _update_state(wait_in_seconds: int, state_manager: StateManager,) -> None:
     state_manager.save()
 
 
-def main():
+def main(argv: list[str]):
     config_manager = ConfigurationManager(CONFIG_FILE)
     config = config_manager.configuration
     state_manager = StateManager(STATE_FILE, 1000)
     state = state_manager.state
 
+    force_check = "--force-check" in argv
+
     print("======================================")
     print("Desktop Mail Notifier")
     print("======================================")
 
-    print(f"Keywords: {', '.join(config.keywords)}" )
+    print(f"Keywords: {', '.join(config.mail_checker.keywords)}" )
     print()
 
-    if not _should_execute(state_manager):
+    if not force_check and not _should_execute(state_manager):
         print("Skipping current execution!")
         return
 
-    mail_service = MailService(config.imap_server, config.imap_port, config.email_address, config.password)
-    mail_checker = MailChecker(mail_service, config.search_in, config.keywords, state.notified_uids)
-
-    notifier = DesktopNotifier(config.message_title, config.message_description, config.notification_audio_file)
+    mail_service = MailService(config.mail_service)
+    mail_checker = MailChecker(config.mail_checker, mail_service, state.notified_uids)
+    notifier = DesktopNotifier(config.notification)
 
     wait_in_seconds = config.check_interval_minutes * 60
     _check_emails(mail_checker, notifier, state_manager)
@@ -70,4 +71,4 @@ def main():
     print("Done!")
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
